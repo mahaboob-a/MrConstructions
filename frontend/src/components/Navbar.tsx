@@ -22,12 +22,15 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 bg-navy-900">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-        <NavLink to="/" className="flex items-baseline gap-2">
-          <span className="font-display text-xl font-semibold text-white">
-            {company.name.toUpperCase()}
-          </span>
-          <span className="hidden text-xs text-bronze-light sm:inline">{company.tagline}</span>
-        </NavLink>
+       <NavLink to="/" className="flex items-center gap-3">
+  <img src="/logo.jpg" alt={`${company.name} logo`} className="h-10 w-auto sm:h-12" />
+  <span className="hidden flex-col leading-tight sm:flex">
+    <span className="font-display text-lg font-semibold text-white">
+      {company.name.toUpperCase()}
+    </span>
+    <span className="text-xs text-bronze-light">{company.tagline}</span>
+  </span>
+</NavLink>
 
         <nav className="hidden md:flex md:items-center">
           {links.map((l) => (
