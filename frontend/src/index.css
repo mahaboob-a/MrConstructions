@@ -30,3 +30,8 @@ h1, h2, h3, h4, .font-display {
     transition-duration: 0.001ms !important;
   }
 }
+.logo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}

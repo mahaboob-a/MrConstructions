@@ -24,17 +24,22 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
 
         {/* Logo */}
-        <NavLink to="/" className="flex items-center gap-2">
-          <img
-            src="/logo.jpg"
-            alt="MR Constructions Logo"
-            className="h-14 w-auto object-contain"
-          />
+       {/* Logo + Company Name */}
+<NavLink to="/" className="flex items-center gap-3">
+ <img
+  src="/logo.jpg"
+  alt="MR Constructions Logo"
+  className="h-16 w-16 rounded-full border-2 border-bronze object-cover shadow-lg"
+/>
 
-          <span className="hidden text-xs text-bronze-light sm:inline">
-            {company.tagline}
-          </span>
-        </NavLink>
+  <span className="text-xl font-bold text-white">
+    MR Constructions
+  </span>
+
+  <span className="hidden border-l border-white/30 pl-3 text-sm font-medium text-bronze-light sm:inline">
+    {company.tagline}
+  </span>
+</NavLink>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex md:items-center">
