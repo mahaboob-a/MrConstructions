@@ -1,10 +1,77 @@
+import { useState } from "react";
 import { company } from "../content";
 
 export default function Contact() {
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setSubmitting(true);
+    setMessage("");
+    setSuccess(false);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const payload = {
+      fullName: String(formData.get("name") || "").trim(),
+      email: String(formData.get("email") || "").trim(),
+      phone: String(formData.get("phone") || "").trim(),
+      projectType: String(formData.get("projectType") || "").trim(),
+      budgetRange: String(formData.get("budget") || "").trim(),
+      message: String(formData.get("message") || "").trim(),
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/contact",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || "Unable to submit your enquiry."
+        );
+      }
+
+      setSuccess(true);
+
+      setMessage(
+        data?.data?.referenceId
+          ? `Your enquiry was submitted successfully. Reference ID: ${data.data.referenceId}`
+          : "Your enquiry was submitted successfully. Our team will contact you soon."
+      );
+
+      form.reset();
+    } catch (error) {
+      setSuccess(false);
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="overflow-hidden bg-stone-50">
 
       {/* ================= HERO ================= */}
+
       <section className="relative isolate overflow-hidden bg-navy-900 py-24 text-white md:py-32">
 
         <div className="hero-grid absolute inset-0 opacity-30" />
@@ -20,6 +87,7 @@ export default function Contact() {
         <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-4 md:grid-cols-2 md:px-6">
 
           {/* Hero Content */}
+
           <div className="relative z-10">
 
             <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 backdrop-blur-xl">
@@ -82,7 +150,8 @@ export default function Contact() {
 
           </div>
 
-          {/* Futuristic Contact Visual */}
+          {/* Contact Visual */}
+
           <div className="relative mx-auto h-[430px] w-full max-w-md">
 
             <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bronze/10 blur-3xl" />
@@ -191,6 +260,7 @@ export default function Contact() {
 
 
       {/* ================= CONTACT SECTION ================= */}
+
       <section className="relative mx-auto max-w-7xl px-4 py-24 md:px-6">
 
         <div className="absolute left-0 top-20 h-72 w-72 rounded-full bg-bronze/5 blur-3xl" />
@@ -198,6 +268,7 @@ export default function Contact() {
         <div className="relative grid gap-8 lg:grid-cols-5">
 
           {/* Contact Information */}
+
           <div className="lg:col-span-2">
 
             <div className="mb-5 flex items-center gap-3">
@@ -307,7 +378,8 @@ export default function Contact() {
           </div>
 
 
-          {/* Contact Form */}
+          {/* ================= CONTACT FORM ================= */}
+
           <div className="lg:col-span-3">
 
             <div className="rounded-[2rem] border border-white/70 bg-white/80 p-7 shadow-2xl backdrop-blur-xl md:p-10">
@@ -333,7 +405,12 @@ export default function Contact() {
               </div>
 
 
-              <form className="mt-8 space-y-6">
+              <form
+                onSubmit={handleSubmit}
+                className="mt-8 space-y-6"
+              >
+
+                {/* Name + Email */}
 
                 <div className="grid gap-6 sm:grid-cols-2">
 
@@ -351,6 +428,7 @@ export default function Contact() {
                       name="name"
                       type="text"
                       placeholder="Your name"
+                      required
                       className="mt-2 w-full rounded-xl border border-stone-200 bg-white/70 px-4 py-3.5 text-sm text-navy outline-none transition placeholder:text-stone-400 focus:border-bronze focus:ring-2 focus:ring-bronze/10"
                     />
 
@@ -371,6 +449,7 @@ export default function Contact() {
                       name="email"
                       type="email"
                       placeholder="you@example.com"
+                      required
                       className="mt-2 w-full rounded-xl border border-stone-200 bg-white/70 px-4 py-3.5 text-sm text-navy outline-none transition placeholder:text-stone-400 focus:border-bronze focus:ring-2 focus:ring-bronze/10"
                     />
 
@@ -378,6 +457,8 @@ export default function Contact() {
 
                 </div>
 
+
+                {/* Phone + Project Type */}
 
                 <div className="grid gap-6 sm:grid-cols-2">
 
@@ -395,6 +476,7 @@ export default function Contact() {
                       name="phone"
                       type="tel"
                       placeholder="Your phone number"
+                      required
                       className="mt-2 w-full rounded-xl border border-stone-200 bg-white/70 px-4 py-3.5 text-sm text-navy outline-none transition placeholder:text-stone-400 focus:border-bronze focus:ring-2 focus:ring-bronze/10"
                     />
 
@@ -414,6 +496,7 @@ export default function Contact() {
                       id="projectType"
                       name="projectType"
                       defaultValue=""
+                      required
                       className="mt-2 w-full rounded-xl border border-stone-200 bg-white/70 px-4 py-3.5 text-sm text-navy outline-none transition focus:border-bronze focus:ring-2 focus:ring-bronze/10"
                     >
 
@@ -448,6 +531,8 @@ export default function Contact() {
                 </div>
 
 
+                {/* Budget */}
+
                 <div>
 
                   <label
@@ -461,6 +546,7 @@ export default function Contact() {
                     id="budget"
                     name="budget"
                     defaultValue=""
+                    required
                     className="mt-2 w-full rounded-xl border border-stone-200 bg-white/70 px-4 py-3.5 text-sm text-navy outline-none transition focus:border-bronze focus:ring-2 focus:ring-bronze/10"
                   >
 
@@ -493,6 +579,8 @@ export default function Contact() {
                 </div>
 
 
+                {/* Message */}
+
                 <div>
 
                   <label
@@ -506,6 +594,7 @@ export default function Contact() {
                     id="message"
                     name="message"
                     rows={6}
+                    required
                     placeholder="Tell us about your project, requirements, location, timeline, and anything else we should know..."
                     className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-white/70 px-4 py-3.5 text-sm text-navy outline-none transition placeholder:text-stone-400 focus:border-bronze focus:ring-2 focus:ring-bronze/10"
                   />
@@ -513,16 +602,42 @@ export default function Contact() {
                 </div>
 
 
+                {/* Status Message */}
+
+                {message && (
+                  <div
+                    role="status"
+                    className={`rounded-xl border px-4 py-4 text-sm ${
+                      success
+                        ? "border-green-200 bg-green-50 text-green-800"
+                        : "border-red-200 bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {message}
+                  </div>
+                )}
+
+
+                {/* Submit */}
+
                 <button
                   type="submit"
-                  className="group relative w-full overflow-hidden rounded-xl bg-navy px-7 py-4 text-sm font-semibold text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-navy-700"
+                  disabled={submitting}
+                  className="group relative w-full overflow-hidden rounded-xl bg-navy px-7 py-4 text-sm font-semibold text-white shadow-xl transition duration-300 hover:-translate-y-1 hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
 
                   <span className="relative z-10 flex items-center justify-center gap-3">
-                    Send Project Enquiry
-                    <span className="transition-transform duration-300 group-hover:translate-x-1">
-                      →
-                    </span>
+
+                    {submitting
+                      ? "Sending..."
+                      : "Send Project Enquiry"}
+
+                    {!submitting && (
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">
+                        →
+                      </span>
+                    )}
+
                   </span>
 
                   <span className="absolute inset-0 -translate-x-full bg-bronze/20 transition-transform duration-500 group-hover:translate-x-0" />
@@ -541,6 +656,7 @@ export default function Contact() {
 
 
       {/* ================= PROJECT TYPES ================= */}
+
       <section className="relative overflow-hidden bg-navy-900 py-24 text-white">
 
         <div className="hero-grid absolute inset-0 opacity-20" />
@@ -578,84 +694,53 @@ export default function Contact() {
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
-            <div className="group rounded-3xl border border-white/10 bg-white/[0.05] p-7 backdrop-blur-xl transition duration-500 hover:-translate-y-2 hover:border-bronze/40 hover:bg-white/[0.08]">
+            {[
+              {
+                number: "01",
+                title: "Residential",
+                description:
+                  "Homes and residential spaces designed and built around your requirements.",
+              },
+              {
+                number: "02",
+                title: "Commercial",
+                description:
+                  "Functional commercial environments created for modern businesses and organizations.",
+              },
+              {
+                number: "03",
+                title: "Renovation",
+                description:
+                  "Transforming existing spaces through thoughtful renovation and modern upgrades.",
+              },
+              {
+                number: "04",
+                title: "Interiors",
+                description:
+                  "Interior environments combining practical planning, aesthetics, and quality finishing.",
+              },
+            ].map((item) => (
+              <div
+                key={item.number}
+                className="group rounded-3xl border border-white/10 bg-white/[0.05] p-7 backdrop-blur-xl transition duration-500 hover:-translate-y-2 hover:border-bronze/40 hover:bg-white/[0.08]"
+              >
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-bronze/10 text-bronze-light">
-                01
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-bronze/10 text-bronze-light">
+                  {item.number}
+                </div>
+
+                <h3 className="mt-7 font-display text-xl font-semibold">
+                  {item.title}
+                </h3>
+
+                <p className="mt-3 text-sm leading-7 text-white/45">
+                  {item.description}
+                </p>
+
+                <div className="mt-6 h-px w-8 bg-bronze transition-all duration-500 group-hover:w-full" />
+
               </div>
-
-              <h3 className="mt-7 font-display text-xl font-semibold">
-                Residential
-              </h3>
-
-              <p className="mt-3 text-sm leading-7 text-white/45">
-                Homes and residential spaces designed and built around
-                your requirements.
-              </p>
-
-              <div className="mt-6 h-px w-8 bg-bronze transition-all duration-500 group-hover:w-full" />
-
-            </div>
-
-
-            <div className="group rounded-3xl border border-white/10 bg-white/[0.05] p-7 backdrop-blur-xl transition duration-500 hover:-translate-y-2 hover:border-bronze/40 hover:bg-white/[0.08]">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-bronze/10 text-bronze-light">
-                02
-              </div>
-
-              <h3 className="mt-7 font-display text-xl font-semibold">
-                Commercial
-              </h3>
-
-              <p className="mt-3 text-sm leading-7 text-white/45">
-                Functional commercial environments created for modern
-                businesses and organizations.
-              </p>
-
-              <div className="mt-6 h-px w-8 bg-bronze transition-all duration-500 group-hover:w-full" />
-
-            </div>
-
-
-            <div className="group rounded-3xl border border-white/10 bg-white/[0.05] p-7 backdrop-blur-xl transition duration-500 hover:-translate-y-2 hover:border-bronze/40 hover:bg-white/[0.08]">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-bronze/10 text-bronze-light">
-                03
-              </div>
-
-              <h3 className="mt-7 font-display text-xl font-semibold">
-                Renovation
-              </h3>
-
-              <p className="mt-3 text-sm leading-7 text-white/45">
-                Transforming existing spaces through thoughtful renovation
-                and modern upgrades.
-              </p>
-
-              <div className="mt-6 h-px w-8 bg-bronze transition-all duration-500 group-hover:w-full" />
-
-            </div>
-
-
-            <div className="group rounded-3xl border border-white/10 bg-white/[0.05] p-7 backdrop-blur-xl transition duration-500 hover:-translate-y-2 hover:border-bronze/40 hover:bg-white/[0.08]">
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-bronze/10 text-bronze-light">
-                04
-              </div>
-
-              <h3 className="mt-7 font-display text-xl font-semibold">
-                Interiors
-              </h3>
-
-              <p className="mt-3 text-sm leading-7 text-white/45">
-                Interior environments combining practical planning,
-                aesthetics, and quality finishing.
-              </p>
-
-              <div className="mt-6 h-px w-8 bg-bronze transition-all duration-500 group-hover:w-full" />
-
-            </div>
+            ))}
 
           </div>
 
@@ -665,6 +750,7 @@ export default function Contact() {
 
 
       {/* ================= CTA ================= */}
+
       <section className="relative overflow-hidden bg-stone-100 px-4 py-24 md:px-6">
 
         <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bronze/10 blur-3xl" />

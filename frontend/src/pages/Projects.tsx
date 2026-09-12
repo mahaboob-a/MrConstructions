@@ -1,51 +1,111 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const projects = [
-  {
-    name: "Modern Residential Villa",
-    category: "Residential Construction",
-    location: "Andhra Pradesh",
-    description:
-      "A contemporary residential project focused on elegant architecture, functional spaces, quality materials, and long-term durability.",
-  },
-  {
-    name: "Commercial Building",
-    category: "Commercial Construction",
-    location: "Andhra Pradesh",
-    description:
-      "A professionally planned commercial development designed for efficient space utilization, modern appearance, and reliable construction.",
-  },
-  {
-    name: "Luxury Interior Renovation",
-    category: "Interior & Renovation",
-    location: "Andhra Pradesh",
-    description:
-      "A complete interior transformation combining modern aesthetics, practical layouts, premium finishes, and comfortable living spaces.",
-  },
-  {
-    name: "Contemporary Residence",
-    category: "Residential Construction",
-    location: "Telangana",
-    description:
-      "A modern residential development created with a balance of architectural character, functionality, comfort, and construction quality.",
-  },
-  {
-    name: "Office Development",
-    category: "Commercial Construction",
-    location: "Telangana",
-    description:
-      "A modern office space designed to provide an efficient working environment with a clean architectural identity and practical planning.",
-  },
-  {
-    name: "Residential Renovation",
-    category: "Renovation",
-    location: "Andhra Pradesh",
-    description:
-      "A residential renovation project focused on improving functionality, appearance, comfort, and the overall value of the existing property.",
-  },
-];
+type ProjectCategory =
+  | "Residential"
+  | "Commercial"
+  | "Industrial"
+  | "Renovation"
+  | "Civil"
+  | "Other";
+
+type Project = {
+  _id: string;
+  name: string;
+  category: ProjectCategory;
+  location: string;
+  year: number;
+  description: string;
+  images: string[];
+  featured: boolean;
+};
+
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function Projects() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Which image is currently displayed for each project
+  const [imageIndexes, setImageIndexes] = useState<
+    Record<string, number>
+  >({});
+
+  // Load projects from backend
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(
+        `${API_URL}/api/projects?limit=50`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load projects");
+      }
+
+      const data = await response.json();
+
+      const projectList = data.items || [];
+
+      setProjects(projectList);
+
+      // Start every project gallery at image 0
+      const indexes: Record<string, number> = {};
+
+      projectList.forEach((project: Project) => {
+        indexes[project._id] = 0;
+      });
+
+      setImageIndexes(indexes);
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+
+      setError(
+        "Unable to load projects. Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Previous image
+  const previousImage = (projectId: string, totalImages: number) => {
+    setImageIndexes((current) => {
+      const currentIndex = current[projectId] || 0;
+
+      return {
+        ...current,
+        [projectId]:
+          currentIndex === 0
+            ? totalImages - 1
+            : currentIndex - 1,
+      };
+    });
+  };
+
+  // Next image
+  const nextImage = (projectId: string, totalImages: number) => {
+    setImageIndexes((current) => {
+      const currentIndex = current[projectId] || 0;
+
+      return {
+        ...current,
+        [projectId]:
+          currentIndex === totalImages - 1
+            ? 0
+            : currentIndex + 1,
+      };
+    });
+  };
+
   return (
     <div className="overflow-hidden bg-stone-50">
 
@@ -65,7 +125,7 @@ export default function Projects() {
 
         <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-4 md:grid-cols-2 md:px-6">
 
-          {/* LEFT CONTENT */}
+          {/* LEFT */}
 
           <div className="relative z-10">
 
@@ -94,9 +154,10 @@ export default function Projects() {
             </h1>
 
             <p className="mt-7 max-w-xl text-base leading-8 text-white/65 md:text-lg">
-              Explore our construction, renovation, commercial, residential,
-              and interior projects. Every project reflects our commitment
-              to quality, precision, functionality, and customer satisfaction.
+              Explore our construction, renovation, commercial,
+              residential, and interior projects. Every project
+              reflects our commitment to quality, precision,
+              functionality, and customer satisfaction.
             </p>
 
             <div className="mt-9 flex flex-wrap gap-4">
@@ -123,7 +184,7 @@ export default function Projects() {
 
           </div>
 
-          {/* RIGHT 3D VISUAL */}
+          {/* RIGHT VISUAL */}
 
           <div className="relative mx-auto h-[430px] w-full max-w-md">
 
@@ -152,7 +213,7 @@ export default function Projects() {
 
             </div>
 
-            {/* PROJECT CARD */}
+            {/* PROJECT COUNT */}
 
             <div className="absolute left-0 top-20 rounded-2xl border border-white/10 bg-white/[0.08] p-4 shadow-2xl backdrop-blur-xl">
 
@@ -170,7 +231,7 @@ export default function Projects() {
 
             </div>
 
-            {/* QUALITY CARD */}
+            {/* QUALITY */}
 
             <div className="absolute bottom-8 right-0 rounded-2xl border border-white/10 bg-white/[0.08] p-5 shadow-2xl backdrop-blur-xl">
 
@@ -188,8 +249,6 @@ export default function Projects() {
 
             </div>
 
-            {/* DECORATIVE RINGS */}
-
             <div className="absolute right-4 top-5 h-20 w-20 rounded-full border border-bronze/30" />
 
             <div className="absolute right-9 top-10 h-10 w-10 rounded-full border border-white/10" />
@@ -202,8 +261,7 @@ export default function Projects() {
 
       </section>
 
-
-      {/* ================= PROJECT INTRO ================= */}
+      {/* ================= INTRO ================= */}
 
       <section className="relative mx-auto max-w-7xl px-4 py-24 md:px-6">
 
@@ -236,10 +294,10 @@ export default function Projects() {
               </h2>
 
               <p className="mt-5 max-w-2xl leading-8 text-stone-500">
-                From residential homes to commercial developments and
-                interior transformations, our work is focused on creating
-                spaces that combine aesthetics, engineering, and practical
-                functionality.
+                From residential homes to commercial developments
+                and interior transformations, our work is focused
+                on creating spaces that combine aesthetics,
+                engineering, and practical functionality.
               </p>
 
             </div>
@@ -251,7 +309,7 @@ export default function Projects() {
               </p>
 
               <p className="text-xs uppercase tracking-wider text-stone-400">
-                Featured Projects
+                Total Projects
               </p>
 
             </div>
@@ -262,106 +320,296 @@ export default function Projects() {
 
       </section>
 
-
-      {/* ================= PROJECT CARDS ================= */}
+      {/* ================= PROJECTS ================= */}
 
       <section className="relative mx-auto max-w-7xl px-4 pb-24 md:px-6">
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Loading */}
 
-          {projects.map((project, index) => (
+        {loading && (
+          <div className="py-20 text-center">
 
-            <article
-              key={project.name}
-              className="group relative overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition-all duration-500 hover:-translate-y-2 hover:border-bronze/30 hover:shadow-2xl"
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-stone-200 border-t-bronze" />
+
+            <p className="mt-4 text-stone-500">
+              Loading projects...
+            </p>
+
+          </div>
+        )}
+
+        {/* Error */}
+
+        {!loading && error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+
+            <p className="font-semibold text-red-700">
+              {error}
+            </p>
+
+            <button
+              onClick={loadProjects}
+              className="mt-4 rounded-lg bg-navy px-5 py-2 text-white"
             >
+              Try Again
+            </button>
 
-              {/* VISUAL AREA */}
+          </div>
+        )}
 
-              <div className="relative h-64 overflow-hidden bg-navy-900">
+        {/* No projects */}
 
-                <div className="hero-grid absolute inset-0 opacity-30" />
+        {!loading &&
+          !error &&
+          projects.length === 0 && (
+            <div className="rounded-2xl border border-stone-200 bg-white p-12 text-center shadow-sm">
 
-                <div className="absolute -left-20 top-10 h-40 w-40 rounded-full bg-bronze/20 blur-3xl transition duration-700 group-hover:scale-150" />
+              <h3 className="text-xl font-semibold text-navy">
+                No projects available
+              </h3>
 
-                <div className="absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl" />
+              <p className="mt-2 text-stone-500">
+                Projects added from the admin dashboard
+                will appear here.
+              </p>
 
-                {/* 3D BUILDING */}
+            </div>
+          )}
 
-                <div className="absolute bottom-0 left-1/2 h-48 w-32 -translate-x-1/2 rounded-t-[1.5rem] border border-bronze/30 bg-gradient-to-b from-white/[0.18] to-white/[0.04] shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-xl transition duration-700 group-hover:-translate-y-2">
+        {/* Project cards */}
 
-                  <div className="absolute inset-x-4 top-5 grid grid-cols-3 gap-2">
+        {!loading &&
+          !error &&
+          projects.length > 0 && (
 
-                    {Array.from({ length: 12 }).map((_, windowIndex) => (
-                      <span
-                        key={windowIndex}
-                        className="h-5 rounded-sm border border-white/10 bg-bronze/20"
-                      />
-                    ))}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 
-                  </div>
+              {projects.map((project, index) => {
 
-                  <span className="absolute bottom-0 left-5 top-0 w-px bg-white/10" />
+                const currentImage =
+                  imageIndexes[project._id] || 0;
 
-                  <span className="absolute bottom-0 right-5 top-0 w-px bg-white/10" />
+                const hasImages =
+                  project.images &&
+                  project.images.length > 0;
 
-                  <div className="absolute -left-3 -right-3 -top-3 h-4 rounded-full border border-bronze/40 bg-bronze/20" />
+                return (
 
-                </div>
+                  <article
+                    key={project._id}
+                    className="group relative overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition-all duration-500 hover:-translate-y-2 hover:border-bronze/30 hover:shadow-2xl"
+                  >
 
-                {/* NUMBER */}
+                    {/* IMAGE AREA */}
 
-                <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-sm font-semibold text-bronze-light backdrop-blur-xl">
-                  0{index + 1}
-                </div>
+                    <div className="relative h-64 overflow-hidden bg-navy-900">
 
-                {/* CATEGORY */}
+                      {hasImages ? (
 
-                <div className="absolute bottom-5 left-5 rounded-full border border-white/10 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/70 backdrop-blur-xl">
-                  {project.category}
-                </div>
+                        <img
+                          src={project.images[currentImage]}
+                          alt={`${project.name} - image ${
+                            currentImage + 1
+                          }`}
+                          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                          loading={
+                            index < 3
+                              ? "eager"
+                              : "lazy"
+                          }
+                          onError={(event) => {
+                            event.currentTarget.style.display =
+                              "none";
+                          }}
+                        />
 
-              </div>
+                      ) : (
 
+                        <div className="flex h-full items-center justify-center">
 
-              {/* CONTENT */}
+                          <div className="text-center text-white/50">
 
-              <div className="p-7">
+                            <div className="text-4xl">
+                              ◆
+                            </div>
 
-                <div className="flex items-start justify-between gap-4">
+                            <p className="mt-2 text-sm">
+                              No image available
+                            </p>
 
-                  <h3 className="font-display text-xl font-semibold text-navy">
-                    {project.name}
-                  </h3>
+                          </div>
 
-                  <span className="text-xl text-bronze transition-transform duration-500 group-hover:translate-x-1">
-                    →
-                  </span>
+                        </div>
 
-                </div>
+                      )}
 
-                <p className="mt-2 text-xs font-medium uppercase tracking-wider text-bronze">
-                  {project.location}
-                </p>
+                      {/* Dark overlay */}
 
-                <p className="mt-4 text-sm leading-7 text-stone-500">
-                  {project.description}
-                </p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-                <div className="mt-6 h-px w-10 bg-bronze transition-all duration-500 group-hover:w-full" />
+                      {/* Number */}
 
-              </div>
+                      <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white backdrop-blur-xl">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
 
-            </article>
+                      {/* Featured */}
 
-          ))}
+                      {project.featured && (
 
-        </div>
+                        <div className="absolute right-5 top-5 rounded-full border border-white/20 bg-bronze px-3 py-1.5 text-xs font-bold text-navy-900 shadow-lg">
+                          Featured
+                        </div>
+
+                      )}
+
+                      {/* Category */}
+
+                      <div className="absolute bottom-5 left-5 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-xl">
+                        {project.category}
+                      </div>
+
+                      {/* Image counter */}
+
+                      {hasImages &&
+                        project.images.length > 1 && (
+
+                          <div className="absolute bottom-5 right-5 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-xl">
+                            {currentImage + 1} /{" "}
+                            {project.images.length}
+                          </div>
+
+                        )}
+
+                      {/* Previous */}
+
+                      {hasImages &&
+                        project.images.length > 1 && (
+
+                          <button
+                            type="button"
+                            aria-label="Previous project image"
+                            onClick={() =>
+                              previousImage(
+                                project._id,
+                                project.images.length
+                              )
+                            }
+                            className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-xl text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100 hover:bg-black/60"
+                          >
+                            ‹
+                          </button>
+
+                        )}
+
+                      {/* Next */}
+
+                      {hasImages &&
+                        project.images.length > 1 && (
+
+                          <button
+                            type="button"
+                            aria-label="Next project image"
+                            onClick={() =>
+                              nextImage(
+                                project._id,
+                                project.images.length
+                              )
+                            }
+                            className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-xl text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100 hover:bg-black/60"
+                          >
+                            ›
+                          </button>
+
+                        )}
+
+                    </div>
+
+                    {/* IMAGE DOTS */}
+
+                    {hasImages &&
+                      project.images.length > 1 && (
+
+                        <div className="flex justify-center gap-1.5 bg-white py-3">
+
+                          {project.images.map(
+                            (_, imageIndex) => (
+
+                              <button
+                                key={imageIndex}
+                                type="button"
+                                aria-label={`Show image ${
+                                  imageIndex + 1
+                                }`}
+                                onClick={() =>
+                                  setImageIndexes(
+                                    (current) => ({
+                                      ...current,
+                                      [project._id]:
+                                        imageIndex,
+                                    })
+                                  )
+                                }
+                                className={`h-2 rounded-full transition-all ${
+                                  currentImage ===
+                                  imageIndex
+                                    ? "w-6 bg-bronze"
+                                    : "w-2 bg-stone-300"
+                                }`}
+                              />
+
+                            )
+                          )}
+
+                        </div>
+
+                      )}
+
+                    {/* CONTENT */}
+
+                    <div className="p-7">
+
+                      <div className="flex items-start justify-between gap-4">
+
+                        <h3 className="font-display text-xl font-semibold text-navy">
+                          {project.name}
+                        </h3>
+
+                        <span className="text-xl text-bronze transition-transform duration-500 group-hover:translate-x-1">
+                          →
+                        </span>
+
+                      </div>
+
+                      <p className="mt-2 text-xs font-medium uppercase tracking-wider text-bronze">
+                        {project.location}
+                      </p>
+
+                      <p className="mt-1 text-xs text-stone-400">
+                        {project.year}
+                      </p>
+
+                      <p className="mt-4 text-sm leading-7 text-stone-500">
+                        {project.description}
+                      </p>
+
+                      <div className="mt-6 h-px w-10 bg-bronze transition-all duration-500 group-hover:w-full" />
+
+                    </div>
+
+                  </article>
+
+                );
+
+              })}
+
+            </div>
+
+          )}
 
       </section>
 
-
-      {/* ================= PROCESS STRIP ================= */}
+      {/* ================= PROCESS ================= */}
 
       <section className="relative overflow-hidden bg-navy-900 py-24 text-white">
 
@@ -396,12 +644,12 @@ export default function Projects() {
             </h2>
 
             <p className="mt-5 max-w-xl leading-8 text-white/55">
-              We approach every project with careful planning, clear
-              communication, quality execution, and attention to detail.
+              We approach every project with careful planning,
+              clear communication, quality execution, and
+              attention to detail.
             </p>
 
           </div>
-
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
@@ -445,7 +693,6 @@ export default function Projects() {
 
       </section>
 
-
       {/* ================= CTA ================= */}
 
       <section className="relative overflow-hidden bg-stone-100 px-4 py-24 md:px-6">
@@ -467,9 +714,9 @@ export default function Projects() {
           </h2>
 
           <p className="mx-auto mt-5 max-w-xl leading-7 text-stone-500">
-            Have a project in mind? Talk to our team about your next
-            construction, renovation, commercial, residential, or interior
-            design project.
+            Have a project in mind? Talk to our team about your
+            next construction, renovation, commercial,
+            residential, or interior design project.
           </p>
 
           <Link
