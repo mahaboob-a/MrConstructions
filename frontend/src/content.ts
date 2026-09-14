@@ -111,13 +111,33 @@ export const processSteps = [
 ];
 
 export const team = [
-  { name: "Fayaz", position: "Civil Engineering" },
-  { name: "Mohammed Hussain", position: "R&D Engineering" },
-  { name: "Mahaboob", position: "Social Media" },
-  { name: "Jameer", position: "Construction Department" },
-  { name: "Ramana", position: "Accounts Department" },
+  {
+    name: "Fayaz",
+    qualification: "Civil-M.Tech",
+    position: "Civil Engineer",
+  },
+  {
+    name: "Mohammed Hussain",
+    qualification: "Mechanical-B.Tech",
+    position: "R&D Department",
+  },
+  {
+    name: "Mahaboob Basha",
+    qualification: "Computer Science-B.Tech",
+    position: "Social Media",
+  },
+  
+  {
+    name: "Jameer",
+    qualification: "",
+    position: "Construction Department",
+  },
+  {
+    name: "Ramana",
+    qualification: "",
+    position: "Accounts Department",
+  },
 ];
-
 export const projectCategories = [
   "All",
   "Residential",
@@ -125,4 +145,13 @@ export const projectCategories = [
   "Industrial",
   "Renovation",
   "Civil",
+];
+;export const projects = [
+  {
+    name: "Residential Building",
+    category: "Residential",
+    description: "Modern residential construction project.",
+    location: "Hyderabad",
+    website: "https://example.com",
+  },
 ];
