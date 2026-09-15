@@ -276,18 +276,24 @@ export default function About() {
                 <h3 className="mt-7 font-display text-xl font-semibold text-navy">
                   {member.name}
                 </h3>
+                {member.qualification && (
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm">
+                    🎓
+                    <span>{member.qualification}</span>
+                  </div>
+                )}
 
                 {/* Position */}
                 <p className="mt-2 text-sm font-medium uppercase tracking-wider text-bronze">
                   {member.position}
                 </p>
 
-                {/* Qualification */}
+                {/* Qualification
                 {member.qualification && (
                   <p className="mt-2 text-sm font-medium text-stone-500">
                     {member.qualification}
                   </p>
-                )}
+                )} */}
 
                 {/* Bottom line */}
                 <div className="mt-7 h-px w-10 bg-bronze transition-all duration-500 group-hover:w-full" />
