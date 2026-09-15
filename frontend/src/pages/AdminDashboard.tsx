@@ -20,7 +20,13 @@ type Project = {
   featured: boolean;
 };
 
-const API_URL = "http://localhost:5000";
+type UploadedImage = {
+  url: string;
+  publicId: string;
+};
+
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const categories: ProjectCategory[] = [
   "Residential",
@@ -37,47 +43,92 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const [editingId, setEditingId] = useState<string | null>(
+    null
+  );
 
   const [name, setName] = useState("");
   const [category, setCategory] =
     useState<ProjectCategory>("Residential");
   const [location, setLocation] = useState("");
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(
+    new Date().getFullYear()
+  );
   const [description, setDescription] = useState("");
-  const [images, setImages] = useState("");
+
+  // Existing images already saved in Cloudinary
+  const [images, setImages] = useState<string[]>([]);
+
+  // New files selected from computer
+  const [selectedFiles, setSelectedFiles] = useState<File[]>(
+    []
+  );
+
   const [featured, setFeatured] = useState(false);
 
-  const token = localStorage.getItem("adminToken");
+  const getToken = () => {
+    return localStorage.getItem("adminToken");
+  };
 
-  // Check login
+  /*
+  |--------------------------------------------------------------------------
+  | CHECK LOGIN
+  |--------------------------------------------------------------------------
+  */
+
   useEffect(() => {
+    const token = getToken();
+
     if (!token) {
       navigate("/admin");
       return;
     }
 
     loadProjects();
-  }, []);
+  }, [navigate]);
 
-  // Get projects
+  /*
+  |--------------------------------------------------------------------------
+  | LOAD PROJECTS
+  |--------------------------------------------------------------------------
+  */
+
   const loadProjects = async () => {
     try {
+      setLoading(true);
+
       const response = await fetch(
         `${API_URL}/api/projects?limit=50`
       );
 
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Failed to load projects"
+        );
+      }
+
       setProjects(data.items || []);
     } catch (error) {
-      console.error("Failed to load projects:", error);
+      console.error(
+        "Failed to load projects:",
+        error
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Clear form
+  /*
+  |--------------------------------------------------------------------------
+  | CLEAR FORM
+  |--------------------------------------------------------------------------
+  */
+
   const clearForm = () => {
     setEditingId(null);
     setName("");
@@ -85,35 +136,202 @@ export default function AdminDashboard() {
     setLocation("");
     setYear(new Date().getFullYear());
     setDescription("");
-    setImages("");
+    setImages([]);
+    setSelectedFiles([]);
     setFeatured(false);
   };
 
-  // Add or update project
-  const saveProject = async (e: React.FormEvent) => {
+  /*
+  |--------------------------------------------------------------------------
+  | SELECT IMAGES FROM COMPUTER
+  |--------------------------------------------------------------------------
+  */
+
+  const handleFileSelection = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files || []);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    // Only images
+    const imageFiles = files.filter((file) =>
+      file.type.startsWith("image/")
+    );
+
+    if (imageFiles.length !== files.length) {
+      alert("Only image files are allowed.");
+    }
+
+    // Maximum 10 images
+    if (imageFiles.length > 10) {
+      alert("You can select a maximum of 10 images.");
+
+      setSelectedFiles(imageFiles.slice(0, 10));
+    } else {
+      setSelectedFiles(imageFiles);
+    }
+
+    // Allows selecting the same file again later
+    e.target.value = "";
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | REMOVE NEW SELECTED IMAGE
+  |--------------------------------------------------------------------------
+  */
+
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles((currentFiles) =>
+      currentFiles.filter(
+        (_, currentIndex) => currentIndex !== index
+      )
+    );
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | REMOVE EXISTING IMAGE
+  |--------------------------------------------------------------------------
+  */
+
+  const removeExistingImage = (index: number) => {
+    setImages((currentImages) =>
+      currentImages.filter(
+        (_, currentIndex) => currentIndex !== index
+      )
+    );
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | UPLOAD IMAGES TO CLOUDINARY
+  |--------------------------------------------------------------------------
+  */
+
+  const uploadImages = async (): Promise<string[]> => {
+    if (selectedFiles.length === 0) {
+      return [];
+    }
+
+    const token = getToken();
+
+    if (!token) {
+      navigate("/admin");
+      return [];
+    }
+
+    const formData = new FormData();
+
+    selectedFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    setUploading(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/projects/upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Image upload failed"
+        );
+      }
+
+      const uploadedImages: UploadedImage[] =
+        data.images || [];
+
+      return uploadedImages.map(
+        (image) => image.url
+      );
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "Image upload failed"
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | ADD / UPDATE PROJECT
+  |--------------------------------------------------------------------------
+  */
+
+  const saveProject = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
+
+    const token = getToken();
 
     if (!token) {
       navigate("/admin");
       return;
     }
 
-    const imageArray = images
-      .split("\n")
-      .map((image) => image.trim())
-      .filter(Boolean);
+    if (!name.trim()) {
+      alert("Please enter a project name.");
+      return;
+    }
 
-    const projectData = {
-      name,
-      category,
-      location,
-      year: Number(year),
-      description,
-      images: imageArray,
-      featured,
-    };
+    if (!location.trim()) {
+      alert("Please enter a location.");
+      return;
+    }
+
+    if (!description.trim()) {
+      alert("Please enter a description.");
+      return;
+    }
+
+    setSaving(true);
 
     try {
+      /*
+       * First upload new images to Cloudinary.
+       */
+      const newImageUrls = await uploadImages();
+
+      /*
+       * Combine:
+       *
+       * Existing images
+       * +
+       * Newly uploaded images
+       */
+      const allImages = [
+        ...images,
+        ...newImageUrls,
+      ];
+
+      const projectData = {
+        name: name.trim(),
+        category,
+        location: location.trim(),
+        year: Number(year),
+        description: description.trim(),
+        images: allImages,
+        featured,
+      };
+
       const url = editingId
         ? `${API_URL}/api/projects/${editingId}`
         : `${API_URL}/api/projects`;
@@ -122,19 +340,19 @@ export default function AdminDashboard() {
 
       const response = await fetch(url, {
         method,
-
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-
         body: JSON.stringify(projectData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to save project");
+        throw new Error(
+          data.error || "Failed to save project"
+        );
       }
 
       alert(
@@ -144,17 +362,25 @@ export default function AdminDashboard() {
       );
 
       clearForm();
-      loadProjects();
+
+      await loadProjects();
     } catch (error) {
       alert(
         error instanceof Error
           ? error.message
           : "Something went wrong"
       );
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Edit project
+  /*
+  |--------------------------------------------------------------------------
+  | EDIT PROJECT
+  |--------------------------------------------------------------------------
+  */
+
   const editProject = (project: Project) => {
     setEditingId(project._id);
 
@@ -163,7 +389,13 @@ export default function AdminDashboard() {
     setLocation(project.location);
     setYear(project.year);
     setDescription(project.description);
-    setImages(project.images.join("\n"));
+
+    // Existing Cloudinary URLs
+    setImages(project.images || []);
+
+    // Clear files selected for a previous operation
+    setSelectedFiles([]);
+
     setFeatured(project.featured);
 
     window.scrollTo({
@@ -172,31 +404,42 @@ export default function AdminDashboard() {
     });
   };
 
-  // Delete project
+  /*
+  |--------------------------------------------------------------------------
+  | DELETE PROJECT
+  |--------------------------------------------------------------------------
+  */
+
   const deleteProject = async (id: string) => {
-    if (!token) return;
+    const token = getToken();
+
+    if (!token) {
+      navigate("/admin");
+      return;
+    }
 
     const confirmed = window.confirm(
       "Are you sure you want to delete this project?"
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
       const response = await fetch(
         `${API_URL}/api/projects/${id}`,
         {
           method: "DELETE",
-
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      if (!response.ok) {
-        const data = await response.json();
+      const data = await response.json();
 
+      if (!response.ok) {
         throw new Error(
           data.error || "Failed to delete project"
         );
@@ -204,7 +447,7 @@ export default function AdminDashboard() {
 
       alert("Project deleted successfully!");
 
-      loadProjects();
+      await loadProjects();
     } catch (error) {
       alert(
         error instanceof Error
@@ -214,7 +457,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // Logout
+  /*
+  |--------------------------------------------------------------------------
+  | LOGOUT
+  |--------------------------------------------------------------------------
+  */
+
   const logout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
@@ -222,14 +470,21 @@ export default function AdminDashboard() {
     navigate("/admin");
   };
 
+  /*
+  |--------------------------------------------------------------------------
+  | UI
+  |--------------------------------------------------------------------------
+  */
+
   return (
     <div className="min-h-screen bg-gray-100">
 
-      {/* Header */}
+      {/* HEADER */}
       <header className="bg-navy-900 px-6 py-4 text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
 
           <div className="flex items-center gap-3">
+
             <img
               src="/logo.jpg"
               alt="MR Constructions"
@@ -245,9 +500,11 @@ export default function AdminDashboard() {
                 Admin Dashboard
               </p>
             </div>
+
           </div>
 
           <button
+            type="button"
             onClick={logout}
             className="rounded border border-white/30 px-4 py-2 hover:bg-white/10"
           >
@@ -259,7 +516,7 @@ export default function AdminDashboard() {
 
       <main className="mx-auto max-w-7xl p-6">
 
-        {/* Add / Edit */}
+        {/* ADD / EDIT PROJECT */}
         <section className="mb-8 rounded-lg bg-white p-6 shadow">
 
           <div className="mb-6 flex items-center justify-between">
@@ -272,8 +529,9 @@ export default function AdminDashboard() {
 
             {editingId && (
               <button
+                type="button"
                 onClick={clearForm}
-                className="rounded border px-4 py-2"
+                className="rounded border px-4 py-2 hover:bg-gray-100"
               >
                 Cancel Edit
               </button>
@@ -286,7 +544,7 @@ export default function AdminDashboard() {
             className="grid gap-4 md:grid-cols-2"
           >
 
-            {/* Name */}
+            {/* PROJECT NAME */}
             <div>
               <label className="mb-1 block font-medium">
                 Project Name
@@ -294,14 +552,16 @@ export default function AdminDashboard() {
 
               <input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) =>
+                  setName(e.target.value)
+                }
                 placeholder="Modern Residential House"
-                className="w-full rounded border p-3"
+                className="w-full rounded border p-3 outline-none focus:border-blue-500"
                 required
               />
             </div>
 
-            {/* Category */}
+            {/* CATEGORY */}
             <div>
               <label className="mb-1 block font-medium">
                 Category
@@ -314,17 +574,20 @@ export default function AdminDashboard() {
                     e.target.value as ProjectCategory
                   )
                 }
-                className="w-full rounded border p-3"
+                className="w-full rounded border p-3 outline-none focus:border-blue-500"
               >
                 {categories.map((item) => (
-                  <option key={item} value={item}>
+                  <option
+                    key={item}
+                    value={item}
+                  >
                     {item}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Location */}
+            {/* LOCATION */}
             <div>
               <label className="mb-1 block font-medium">
                 Location
@@ -332,14 +595,16 @@ export default function AdminDashboard() {
 
               <input
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) =>
+                  setLocation(e.target.value)
+                }
                 placeholder="Nandyal, Andhra Pradesh"
-                className="w-full rounded border p-3"
+                className="w-full rounded border p-3 outline-none focus:border-blue-500"
                 required
               />
             </div>
 
-            {/* Year */}
+            {/* YEAR */}
             <div>
               <label className="mb-1 block font-medium">
                 Year
@@ -351,13 +616,14 @@ export default function AdminDashboard() {
                 onChange={(e) =>
                   setYear(Number(e.target.value))
                 }
-                className="w-full rounded border p-3"
+                className="w-full rounded border p-3 outline-none focus:border-blue-500"
                 required
               />
             </div>
 
-            {/* Description */}
+            {/* DESCRIPTION */}
             <div className="md:col-span-2">
+
               <label className="mb-1 block font-medium">
                 Description
               </label>
@@ -369,37 +635,141 @@ export default function AdminDashboard() {
                 }
                 placeholder="Describe this construction project..."
                 rows={5}
-                className="w-full rounded border p-3"
+                className="w-full rounded border p-3 outline-none focus:border-blue-500"
                 required
               />
+
             </div>
 
-            {/* Images */}
+            {/* IMAGE UPLOAD */}
             <div className="md:col-span-2">
-              <label className="mb-1 block font-medium">
-                Image URLs
+
+              <label className="mb-2 block font-medium">
+                Project Images
               </label>
 
-              <textarea
-                value={images}
-                onChange={(e) =>
-                  setImages(e.target.value)
-                }
-                placeholder={`Paste one image URL per line
+              <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center">
 
-https://example.com/house1.jpg
-https://example.com/house2.jpg`}
-                rows={5}
-                className="w-full rounded border p-3"
-              />
+                <input
+                  id="project-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelection}
+                  className="hidden"
+                />
 
-              <p className="mt-1 text-sm text-gray-500">
-                For now, enter one image URL per line.
-              </p>
+                <label
+                  htmlFor="project-images"
+                  className="inline-block cursor-pointer rounded-lg bg-navy-900 px-6 py-3 font-semibold text-white hover:opacity-90"
+                >
+                  Select Images
+                </label>
+
+                <p className="mt-3 text-sm text-gray-500">
+                  Select up to 10 images from your
+                  computer.
+                </p>
+
+                <p className="text-xs text-gray-400">
+                  Maximum 5 MB per image.
+                </p>
+
+              </div>
+
+              {/* EXISTING IMAGES */}
+              {images.length > 0 && (
+                <div className="mt-6">
+
+                  <h3 className="mb-3 font-semibold">
+                    Existing Images
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+
+                    {images.map(
+                      (image, index) => (
+                        <div
+                          key={`${image}-${index}`}
+                          className="relative overflow-hidden rounded-lg border bg-white"
+                        >
+
+                          <img
+                            src={image}
+                            alt={`Project image ${index + 1}`}
+                            className="h-32 w-full object-cover"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              removeExistingImage(index)
+                            }
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-lg font-bold text-white hover:bg-red-700"
+                          >
+                            ×
+                          </button>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* NEW SELECTED IMAGES */}
+              {selectedFiles.length > 0 && (
+                <div className="mt-6">
+
+                  <h3 className="mb-3 font-semibold">
+                    New Images
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+
+                    {selectedFiles.map(
+                      (file, index) => (
+                        <div
+                          key={`${file.name}-${file.size}-${index}`}
+                          className="relative overflow-hidden rounded-lg border bg-white"
+                        >
+
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            className="h-32 w-full object-cover"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              removeSelectedFile(index)
+                            }
+                            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-lg font-bold text-white hover:bg-red-700"
+                          >
+                            ×
+                          </button>
+
+                          <div className="truncate p-2 text-xs text-gray-500">
+                            {file.name}
+                          </div>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+              )}
+
             </div>
 
-            {/* Featured */}
+            {/* FEATURED */}
             <label className="flex items-center gap-2">
+
               <input
                 type="checkbox"
                 checked={featured}
@@ -408,19 +778,25 @@ https://example.com/house2.jpg`}
                 }
               />
 
-              Featured Project
+              <span>Featured Project</span>
+
             </label>
 
-            {/* Submit */}
+            {/* SAVE */}
             <div className="md:col-span-2">
 
               <button
                 type="submit"
-                className="rounded bg-yellow-600 px-6 py-3 font-bold text-white hover:bg-yellow-700"
+                disabled={saving || uploading}
+                className="rounded bg-yellow-600 px-6 py-3 font-bold text-white hover:bg-yellow-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {editingId
-                  ? "Update Project"
-                  : "Add Project"}
+                {uploading
+                  ? "Uploading Images..."
+                  : saving
+                    ? "Saving Project..."
+                    : editingId
+                      ? "Update Project"
+                      : "Add Project"}
               </button>
 
             </div>
@@ -428,7 +804,7 @@ https://example.com/house2.jpg`}
           </form>
         </section>
 
-        {/* Projects */}
+        {/* EXISTING PROJECTS */}
         <section>
 
           <h2 className="mb-5 text-2xl font-bold">
@@ -451,8 +827,8 @@ https://example.com/house2.jpg`}
                   className="overflow-hidden rounded-lg bg-white shadow"
                 >
 
-                  {/* Image */}
-                  {project.images.length > 0 ? (
+                  {/* COVER IMAGE */}
+                  {project.images?.length > 0 ? (
                     <img
                       src={project.images[0]}
                       alt={project.name}
@@ -481,7 +857,8 @@ https://example.com/house2.jpg`}
                     </div>
 
                     <p className="text-sm text-gray-500">
-                      {project.category} • {project.year}
+                      {project.category} •{" "}
+                      {project.year}
                     </p>
 
                     <p className="mt-1 text-sm text-gray-500">
@@ -494,7 +871,7 @@ https://example.com/house2.jpg`}
 
                     <p className="mt-3 text-sm">
                       <strong>
-                        {project.images.length}
+                        {project.images?.length || 0}
                       </strong>{" "}
                       image(s)
                     </p>
@@ -502,6 +879,7 @@ https://example.com/house2.jpg`}
                     <div className="mt-4 flex gap-2">
 
                       <button
+                        type="button"
                         onClick={() =>
                           editProject(project)
                         }
@@ -511,8 +889,11 @@ https://example.com/house2.jpg`}
                       </button>
 
                       <button
+                        type="button"
                         onClick={() =>
-                          deleteProject(project._id)
+                          deleteProject(
+                            project._id
+                          )
                         }
                         className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
                       >

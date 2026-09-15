@@ -28,12 +28,12 @@ export default function Projects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Which image is currently displayed for each project
+  // Current image for each project
   const [imageIndexes, setImageIndexes] = useState<
     Record<string, number>
   >({});
 
-  // Load projects from backend
+  // Load projects
   useEffect(() => {
     loadProjects();
   }, []);
@@ -57,7 +57,7 @@ export default function Projects() {
 
       setProjects(projectList);
 
-      // Start every project gallery at image 0
+      // Start every project at image 0
       const indexes: Record<string, number> = {};
 
       projectList.forEach((project: Project) => {
@@ -76,10 +76,54 @@ export default function Projects() {
     }
   };
 
-  // Previous image
-  const previousImage = (projectId: string, totalImages: number) => {
+  // =========================================================
+  // AUTOMATIC IMAGE SLIDER
+  // Changes image every 3 seconds
+  // Only projects with 2+ images are affected
+  // =========================================================
+  useEffect(() => {
+    if (projects.length === 0) return;
+
+    const interval = window.setInterval(() => {
+      setImageIndexes((current) => {
+        const nextIndexes: Record<string, number> = {
+          ...current,
+        };
+
+        projects.forEach((project) => {
+          if (
+            project.images &&
+            project.images.length > 1
+          ) {
+            const currentIndex =
+              current[project._id] || 0;
+
+            nextIndexes[project._id] =
+              currentIndex >= project.images.length - 1
+                ? 0
+                : currentIndex + 1;
+          }
+        });
+
+        return nextIndexes;
+      });
+    }, 3000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [projects]);
+
+  // =========================================================
+  // PREVIOUS IMAGE
+  // =========================================================
+  const previousImage = (
+    projectId: string,
+    totalImages: number
+  ) => {
     setImageIndexes((current) => {
-      const currentIndex = current[projectId] || 0;
+      const currentIndex =
+        current[projectId] || 0;
 
       return {
         ...current,
@@ -91,10 +135,16 @@ export default function Projects() {
     });
   };
 
-  // Next image
-  const nextImage = (projectId: string, totalImages: number) => {
+  // =========================================================
+  // NEXT IMAGE
+  // =========================================================
+  const nextImage = (
+    projectId: string,
+    totalImages: number
+  ) => {
     setImageIndexes((current) => {
-      const currentIndex = current[projectId] || 0;
+      const currentIndex =
+        current[projectId] || 0;
 
       return {
         ...current,
@@ -109,7 +159,9 @@ export default function Projects() {
   return (
     <div className="overflow-hidden bg-stone-50">
 
-      {/* ================= HERO ================= */}
+      {/* =====================================================
+          HERO
+      ====================================================== */}
 
       <section className="relative isolate overflow-hidden bg-navy-900 py-24 text-white md:py-32">
 
@@ -261,7 +313,9 @@ export default function Projects() {
 
       </section>
 
-      {/* ================= INTRO ================= */}
+      {/* =====================================================
+          INTRO
+      ====================================================== */}
 
       <section className="relative mx-auto max-w-7xl px-4 py-24 md:px-6">
 
@@ -320,7 +374,9 @@ export default function Projects() {
 
       </section>
 
-      {/* ================= PROJECTS ================= */}
+      {/* =====================================================
+          PROJECTS
+      ====================================================== */}
 
       <section className="relative mx-auto max-w-7xl px-4 pb-24 md:px-6">
 
@@ -447,7 +503,7 @@ export default function Projects() {
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-                      {/* Number */}
+                      {/* Project number */}
 
                       <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white backdrop-blur-xl">
                         {String(index + 1).padStart(2, "0")}
@@ -475,13 +531,15 @@ export default function Projects() {
                         project.images.length > 1 && (
 
                           <div className="absolute bottom-5 right-5 rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-xl">
+
                             {currentImage + 1} /{" "}
                             {project.images.length}
+
                           </div>
 
                         )}
 
-                      {/* Previous */}
+                      {/* Previous button */}
 
                       {hasImages &&
                         project.images.length > 1 && (
@@ -502,7 +560,7 @@ export default function Projects() {
 
                         )}
 
-                      {/* Next */}
+                      {/* Next button */}
 
                       {hasImages &&
                         project.images.length > 1 && (
@@ -525,7 +583,9 @@ export default function Projects() {
 
                     </div>
 
-                    {/* IMAGE DOTS */}
+                    {/* =================================================
+                        IMAGE DOTS
+                    ================================================== */}
 
                     {hasImages &&
                       project.images.length > 1 && (
@@ -609,7 +669,9 @@ export default function Projects() {
 
       </section>
 
-      {/* ================= PROCESS ================= */}
+      {/* =====================================================
+          PROCESS
+      ====================================================== */}
 
       <section className="relative overflow-hidden bg-navy-900 py-24 text-white">
 
@@ -693,7 +755,9 @@ export default function Projects() {
 
       </section>
 
-      {/* ================= CTA ================= */}
+      {/* =====================================================
+          CTA
+      ====================================================== */}
 
       <section className="relative overflow-hidden bg-stone-100 px-4 py-24 md:px-6">
 

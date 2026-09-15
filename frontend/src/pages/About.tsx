@@ -237,6 +237,7 @@ export default function About() {
       </section>
 
       {/* ================= TEAM ================= */}
+
       <section className="relative mx-auto max-w-7xl px-4 py-24 md:px-6">
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
@@ -271,14 +272,24 @@ export default function About() {
                   {member.name.charAt(0)}
                 </div>
 
+                {/* Name */}
                 <h3 className="mt-7 font-display text-xl font-semibold text-navy">
                   {member.name}
                 </h3>
 
+                {/* Position */}
                 <p className="mt-2 text-sm font-medium uppercase tracking-wider text-bronze">
                   {member.position}
                 </p>
 
+                {/* Qualification */}
+                {member.qualification && (
+                  <p className="mt-2 text-sm font-medium text-stone-500">
+                    {member.qualification}
+                  </p>
+                )}
+
+                {/* Bottom line */}
                 <div className="mt-7 h-px w-10 bg-bronze transition-all duration-500 group-hover:w-full" />
               </div>
             </div>

@@ -28,9 +28,9 @@ export default function WhatsAppButton() {
     >
       <FaWhatsapp className="text-3xl" />
 
-      <span className="absolute right-16 hidden whitespace-nowrap rounded-lg bg-navy-900 px-3 py-2 text-sm font-medium text-white shadow-lg md:block">
+      {/* <span className="absolute right-16 hidden whitespace-nowrap rounded-lg bg-navy-900 px-3 py-2 text-sm font-medium text-white shadow-lg md:block">
         Chat on WhatsApp
-      </span>
+      </span> */}
     </a>
   );
 }
