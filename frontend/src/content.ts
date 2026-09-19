@@ -1,5 +1,5 @@
-// Central place for the company's real content, sourced from the
-// MR Constructions intake form. Edit here rather than in components.
+// Central place for the company's real content.
+// Edit company information here rather than inside components.
 
 export const company = {
   name: "MR Constructions",
@@ -27,12 +27,22 @@ export const strengths = [
   "Transparent Pricing",
 ];
 
-export const values = ["Quality", "Integrity", "Safety", "Transparency", "Customer Satisfaction"];
+export const values = [
+  "Quality",
+  "Integrity",
+  "Safety",
+  "Transparency",
+  "Customer Satisfaction",
+];
 
 export const mission =
   "To deliver safe, high-quality construction while meeting our customers' requirements and expectations.";
 
-export const vision = mission; // form listed the same statement for both
+export const vision = mission;
+
+// --------------------------------------------------
+// SERVICES
+// --------------------------------------------------
 
 export const services = [
   {
@@ -47,17 +57,24 @@ export const services = [
   },
   {
     name: "Interior Design",
-    description: "Interior planning and finishing for homes and commercial spaces, from concept to handover.",
+    description:
+      "Interior planning and finishing for homes and commercial spaces, from concept to handover.",
   },
   {
     name: "Renovation & Remodeling",
-    description: "Structural and interior upgrades that bring existing properties up to modern standards.",
+    description:
+      "Structural and interior upgrades that bring existing properties up to modern standards.",
   },
   {
     name: "Documentation & Accounts",
-    description: "Transparent project costing, contracts and accounts through completion.",
+    description:
+      "Transparent project costing, contracts and accounts through completion.",
   },
 ];
+
+// --------------------------------------------------
+// PROCESS
+// --------------------------------------------------
 
 export const processSteps = [
   {
@@ -110,34 +127,71 @@ export const processSteps = [
   },
 ];
 
+// --------------------------------------------------
+// MANAGING DIRECTOR
+// --------------------------------------------------
+
+export const managingDirector = {
+  name: "Mahammad Hussain.D",
+  // qualification: "B.Tech (Civil Engineering)",
+  position: "Managing Director",
+  description:
+    "With a strong vision and commitment to excellence, Mahaboob Basha leads MR Constructions with a focus on quality, innovation and customer satisfaction.",
+  image: "/md-profile.jpg",
+};
+
+// --------------------------------------------------
+// TEAM
+// --------------------------------------------------
+
 export const team = [
   {
     name: "Fayaz",
-    qualification: "Civil-M.Tech",
+    qualification: "B.Tech (Civil Engineering)",
     position: "Civil Engineer",
+    description:
+      "Fayaz brings strong technical knowledge and hands-on experience in structural design, site management and quality control. He ensures every project meets high standards of safety and durability.",
   },
   {
     name: "Mohammed Hussain",
-    qualification: "Mechanical-B.Tech",
-    position: "R&D Department",
+    qualification: "M.Tech (Structural Engineering)",
+    position: "Architecture Department",
+    description:
+      "Mohammed Hussain leads our research and development initiatives, focusing on innovative construction solutions, sustainable practices and advanced building technologies.",
   },
   {
     name: "Mahaboob Basha",
-    qualification: "Computer Science-B.Tech",
+    qualification: "Computer Science - B.Tech",
     position: "Social Media",
+    description:
+      "Mahaboob Basha manages our social media presence, creating engaging content and building brand awareness across digital platforms.",
   },
-  
   {
     name: "Jameer",
-    qualification: "",
+    qualification: "Diploma in Civil Engineering",
     position: "Construction Department",
+    description:
+      "Jameer oversees on-site operations, ensuring quality workmanship, timely execution and strict adherence to safety standards.",
   },
   {
     name: "Ramana",
-    qualification: "",
+    qualification: "B.Com (Accounting & Finance)",
     position: "Accounts Department",
+    description:
+      "Ramana manages our financial operations, ensuring accurate records, efficient budgeting and smooth workflow across all departments.",
+  },
+  {
+    name: "Aadhya",
+    qualification: "",
+    position: "Client Support",
+    description:
+      "Aadhya supports client communication and coordination, helping customers receive timely information and assistance throughout their project journey.",
   },
 ];
+// --------------------------------------------------
+// PROJECT CATEGORIES
+// --------------------------------------------------
+
 export const projectCategories = [
   "All",
   "Residential",
@@ -146,7 +200,12 @@ export const projectCategories = [
   "Renovation",
   "Civil",
 ];
-;export const projects = [
+
+// --------------------------------------------------
+// FALLBACK PROJECT DATA
+// --------------------------------------------------
+
+export const projects = [
   {
     name: "Residential Building",
     category: "Residential",
