@@ -136,7 +136,7 @@ export const managingDirector = {
   // qualification: "B.Tech (Civil Engineering)",
   position: "Managing Director",
   description:
-    "With a strong vision and commitment to excellence, Mahaboob Basha leads MR Constructions with a focus on quality, innovation and customer satisfaction.",
+    "With a strong vision and commitment to excellence, Mahammad Hussain leads MR Constructions with a focus on quality, innovation and customer satisfaction.",
   image: "/md-profile.jpg",
 };
 
@@ -147,14 +147,14 @@ export const managingDirector = {
 export const team = [
   {
     name: "Fayaz",
-    qualification: "B.Tech (Civil Engineering)",
+    qualification: "M.Tech (Civil Engineering)",
     position: "Civil Engineer",
     description:
       "Fayaz brings strong technical knowledge and hands-on experience in structural design, site management and quality control. He ensures every project meets high standards of safety and durability.",
   },
   {
     name: "Mohammed Hussain",
-    qualification: "M.Tech (Structural Engineering)",
+    qualification: "B.Tech (Structural Engineering)",
     position: "Architecture Department",
     description:
       "Mohammed Hussain leads our research and development initiatives, focusing on innovative construction solutions, sustainable practices and advanced building technologies.",
@@ -168,14 +168,14 @@ export const team = [
   },
   {
     name: "Jameer",
-    qualification: "Diploma in Civil Engineering",
+    qualification: "",
     position: "Construction Department",
     description:
       "Jameer oversees on-site operations, ensuring quality workmanship, timely execution and strict adherence to safety standards.",
   },
   {
     name: "Ramana",
-    qualification: "B.Com (Accounting & Finance)",
+    qualification: "",
     position: "Accounts Department",
     description:
       "Ramana manages our financial operations, ensuring accurate records, efficient budgeting and smooth workflow across all departments.",

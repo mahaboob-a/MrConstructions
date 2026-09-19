@@ -6,7 +6,7 @@ export default function About() {
     position: "Managing Director",
     // qualification: "B.Tech (Civil Engineering)",
     description:
-      "With a strong vision and years of industry experience, Mahaboob Basha leads our team with a commitment to quality, innovation and excellence. His strategic direction drives the growth and success of MR Constructions.",
+      "With a strong vision and years of industry experience, Mahammad Hussain leads our team with a commitment to quality, innovation and excellence. His strategic direction drives the growth and success of MR Constructions.",
     image: "/md.jpg",
   };
 
